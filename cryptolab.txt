@@ -1,0 +1,253 @@
+package crypto;
+
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+
+public class AES {
+    private SecretKey key;
+    private int keySize = 128;
+    private int T_Len = 128;
+    private Cipher encryptionCipher;
+
+    public void init() throws Exception {
+        KeyGenerator generator = KeyGenerator.getInstance("AES");
+        generator.init(keySize);
+        key = generator.generateKey();
+
+        // Initialize encryptionCipher here
+        encryptionCipher = Cipher.getInstance("AES/GCM/NoPadding");
+        encryptionCipher.init(Cipher.ENCRYPT_MODE, key);
+    }
+
+    public String encrypt(String message) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        byte[] messageInBytes = message.getBytes();
+        byte[] encryptedBytes = encryptionCipher.doFinal(messageInBytes);
+        return encode(encryptedBytes);
+    }
+
+    public String decrypt(String encryptedMessage) throws Exception {
+        byte[] messageInBytes = decode(encryptedMessage);
+        Cipher decryptedCipher = Cipher.getInstance("AES/GCM/NoPadding");
+        GCMParameterSpec spec = new GCMParameterSpec(T_Len, encryptionCipher.getIV());
+        decryptedCipher.init(Cipher.DECRYPT_MODE, key, spec);
+        byte[] decryptedBytes = decryptedCipher.doFinal(messageInBytes);
+        return new String(decryptedBytes);
+    }
+
+    public String encode(byte[] data) {
+        return Base64.getEncoder().encodeToString(data);
+    }
+
+    public byte[] decode(String data) {
+        return Base64.getDecoder().decode(data);
+    }
+
+    public static void main(String[] args) throws Exception {
+        AES aes = new AES();
+        aes.init();
+        String encryptedMessage = aes.encrypt("Hello World");
+        String decryptedMessage = aes.decrypt(encryptedMessage);
+
+        System.out.println("Encrypted Message: " + encryptedMessage);
+        System.out.println("Decrypted Message: " + decryptedMessage);
+    }
+}
+
+
+DES-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+package crypto;
+
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+
+public class DES {
+    private SecretKey key;
+    private Cipher encryptionCipher;
+
+    public void init() throws NoSuchAlgorithmException {
+        KeyGenerator generator = KeyGenerator.getInstance("DES");
+        key = generator.generateKey();
+
+        // Initialize encryptionCipher here
+        encryptionCipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+        encryptionCipher.init(Cipher.ENCRYPT_MODE, key);
+    }
+
+    public String encrypt(String message) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        byte[] messageInBytes = message.getBytes();
+        byte[] encryptedBytes = encryptionCipher.doFinal(messageInBytes);
+        return encode(encryptedBytes);
+    }
+
+    public String decrypt(String encryptedMessage) throws Exception {
+        Cipher decryptedCipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
+        decryptedCipher.init(Cipher.DECRYPT_MODE, key);
+
+        byte[] messageInBytes = decode(encryptedMessage);
+        byte[] decryptedBytes = decryptedCipher.doFinal(messageInBytes);
+        return new String(decryptedBytes);
+    }
+
+    public String encode(byte[] data) {
+        return Base64.getEncoder().encodeToString(data);
+    }
+
+    public byte[] decode(String data) {
+        return Base64.getDecoder().decode(data);
+    }
+
+    public static void main(String[] args) throws Exception {
+        DES des = new DES();
+        des.init();
+        String encryptedMessage = des.encrypt("Hello World");
+        String decryptedMessage = des.decrypt(encryptedMessage);
+
+        System.out.println("Encrypted Message: " + encryptedMessage);
+        System.out.println("Decrypted Message: " + decryptedMessage);
+    }
+}
+
+
+Vigenere cipher---------------------------------------------------------------------------------------------------------------------------------------------------------
+import java.util.Scanner;
+
+public class MyClass {
+
+    public static String encrypt(String plaintext, String key) {
+        StringBuilder ciphertext = new StringBuilder();
+        int keyLength = key.length();
+
+        for (int i = 0; i < plaintext.length(); i++) {
+            char plainChar = plaintext.charAt(i);
+            char keyChar = key.charAt(i % keyLength);
+            System.out.println(keyChar);
+
+            // if (Character.isUpperCase(plainChar)) {
+            //     System.out.println(plainChar+keyChar);
+            //     ciphertext.append((char) ((plainChar + keyChar - 2 * 'A') % 26 + 'A'));
+            // } else if (Character.isLowerCase(plainChar)) {
+            //      System.out.println(plainChar+keyChar);
+            //     ciphertext.append((char) ((plainChar + keyChar - 2 * 'a') % 26 + 'a'));
+            // } else {
+            //     ciphertext.append(plainChar); // Leave non-alphabetic characters unchanged
+            // }
+            
+            int en = ((plainChar - 'a') + (keyChar - 'a')) % 26 + 'a';
+            System.out.println(en);
+            char k = (char) en;
+            ciphertext.append(k);
+        }
+
+        return ciphertext.toString();
+    }
+
+    public static String decrypt(String ciphertext, String key) {
+        StringBuilder plaintext = new StringBuilder();
+        int keyLength = key.length();
+
+        for (int i = 0; i < ciphertext.length(); i++) {
+            char cipherChar = ciphertext.charAt(i);
+            char keyChar = key.charAt(i % keyLength);
+
+            // if (Character.isUpperCase(cipherChar)) {
+            //     plaintext.append((char) ((cipherChar - keyChar + 26) % 26 + 'A'));
+            // } else if (Character.isLowerCase(cipherChar)) {
+            //     plaintext.append((char) ((cipherChar - keyChar + 26) % 26 + 'a'));
+            // } else {
+            //     plaintext.append(cipherChar); // Leave non-alphabetic characters unchanged
+            // }
+            
+             int en = ((cipherChar - 'a') - (keyChar - 'a') + 26) % 26 + 'a';
+            //  System.out.println("cihpertext: "+ (cipherChar-'a'));
+            //  System.out.println("keyChar: "+ (keyChar -'a'));
+            //  System.out.println("final: "+((cipherChar - 'a') - (keyChar - 'a') % 26 ));
+            System.out.println(en);
+            char k = (char) en;
+            plaintext.append(k);
+        }
+
+        return plaintext.toString();
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the plaintext: ");
+        String plaintext = scanner.nextLine();
+
+        System.out.print("Enter the key: ");
+        String key = scanner.nextLine();
+
+        String encryptedText = encrypt(plaintext, key);
+        String decryptedText = decrypt(encryptedText, key);
+
+        System.out.println("\nEncrypted Text: " + encryptedText);
+        System.out.println("Decrypted Text: " + decryptedText);
+
+        scanner.close();
+    }
+}
+
+
+caesar cipher ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import java.util.Scanner;
+
+public class MyClass {
+    public static void main(String args[]) {
+        Scanner s = new Scanner(System.in);
+
+        System.out.println("Enter a string:");
+        String str = s.next();
+        System.out.println("Enter a number:");
+        int n = s.nextInt();
+
+        String result = encryptString(str, n);
+
+        System.out.println("Encrypted String: " + result);
+    }
+
+    private static String encryptString(String str, int n) {
+        char[] A = new char[str.length()];
+
+        for (int i = 0; i < str.length(); i++) {
+            char originalChar = str.charAt(i);
+
+            // Check if the character is a lowercase letter
+            if (Character.isLowerCase(originalChar)) {
+                int shiftedChar = (originalChar - 'a' + n) % 26 + 'a';
+                A[i] = (char) shiftedChar;
+            }
+            // Check if the character is an uppercase letter
+            else if (Character.isUpperCase(originalChar)) {
+                int shiftedChar = (originalChar - 'A' + n) % 26 + 'A';
+                A[i] = (char) shiftedChar;
+            }
+            // If the character is not a letter, keep it unchanged
+            else {
+                A[i] = originalChar;
+            }
+        }
+
+        return new String(A);
+    }
+}
